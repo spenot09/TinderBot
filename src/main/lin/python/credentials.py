@@ -1,2 +1,2 @@
-_username = 'lin.shao5014'
-_password = 'CupidsArrow->'
+username = 'lin.shao5014'
+password = 'CupidsArrow->'
