@@ -1,14 +1,15 @@
 # IMPORTS
 import os
 from selenium import webdriver
-from time import sleep
+from selenium.webdriver.common.keys import Keys
+from time import time, sleep
 
-# LOCAL MODULE IMPORTS
-# APPEND PATH
+# PATH
 if 'PYDEVD_LOAD_VALUES_ASYNC' in os.environ:
     import sys
     sys.path.append(os.getcwd()+'\\src\\main\\lin\\python')
 
+# LOCAL MODULE IMPORTS
 from mypath import get_path, my_cd
 from credentials import username, password
 
@@ -17,14 +18,16 @@ class TinderBot:
     def __init__(self):
         self.root_path = get_path('root_path')
         self.data_path = get_path('data_path')
-        self.data_path = get_path('dir_path')
-        self.data_path = get_path('file_path')
-        self.driver = webdriver.Chrome(self.root_path + '/bin/chromedriver.exe')
+        self.dir_path = get_path('dir_path')
+        self.file_path = get_path('file_path')
+        self.driver = webdriver.Chrome(os.path.join(self.root_path, 'bin', 'chromedriver.exe'))
+        self.image = None
 
     def login(self):
+        self.driver.maximize_window()
         self.driver.get('https://tinder.com')
 
-        sleep(2)
+        sleep(3)
 
         fb_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/div[2]/button')
         fb_btn.click()
@@ -44,19 +47,77 @@ class TinderBot:
 
         self.driver.switch_to.window(base_window)
 
-        popup_1 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]/span')
+        sleep(2)
+
+        try:
+            popup_1 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]')
+        except:
+            popup_1 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]/span')
         popup_1.click()
 
-        popup_2 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[2]/span')
+        try:
+            popup_2 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[2]')
+        except:
+            popup_2 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[2]/span')
         popup_2.click()
 
     def like(self):
-        like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/button[3]/span/svg')
-        like_btn.click()
+        try:
+            like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div/button[3]')
+            like_btn.click()
+        except:
+            self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_RIGHT)
+
+    def super_like(self):
+        try:
+            like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div/button[2]')
+            like_btn.click()
+        except:
+            self.driver.find_element_by_tag_name('body').send_keys(Keys.ENTER)
 
     def dislike(self):
-        dislike_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/button[1]/span/svg')
-        dislike_btn.click()
+        try:
+            dislike_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div/button[1]')
+            dislike_btn.click()
+        except:
+            self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_LEFT)
+
+    def press_space(self):
+        self.driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
+
+    def press_up(self):
+        self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_UP)
+
+    def press_down(self):
+        self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_DOWN)
+
+    def close_popup(self):
+        popup_3 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div[2]/button[2]')
+        popup_3.click()
+
+    def close_match(self):
+        match_popup = self.driver.find_element_by_xpath('//*[@id="modal-manager-canvas"]/div/div/div[1]/div/div[3]/a')
+        match_popup.click()
+
+    def scrape_images(self, save_dir):
+        self.press_up()
+        xpath_base = '//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div/div[1]/span/a[2]/div/div[1]/div'
+        image_num = 1
+        xpath = xpath_base + f'/div[{image_num}]/div/div'
+        while True:
+            try:
+                self.image = self.driver.find_element_by_xpath(xpath)
+            except:
+                break
+            else:
+                self.save_image(os.path.join(save_dir, f'{time()}_{image_num}.png'))
+                self.press_space()
+                image_num += 1
+                xpath = xpath_base + f'/div[{image_num}]/div/div'
+
+    def save_image(self, save_path):
+        with open(save_path, 'wb') as file:
+            file.write(self.image.screenshot_as_png)
 
     def auto_swipe(self):
         while True:
@@ -69,18 +130,29 @@ class TinderBot:
                 except Exception:
                     self.close_match()
 
-    def close_popup(self):
-        popup_3 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div[2]/button[2]')
-        popup_3.click()
+    def manual_classify(self):
+        while True:
+            classify = input()
+            try:
+                if classify == 'superlike':
+                    save_dir = os.path.join(self.data_path, 'tinder', 'superlike')
+                    self.scrape_images(save_dir)
+                    self.super_like()
+                elif classify == 'like':
+                    save_dir = os.path.join(self.data_path, 'tinder', 'like')
+                    self.scrape_images(save_dir)
+                    self.like()
+                elif classify == 'dislike':
+                    save_dir = os.path.join(self.data_path, 'tinder', 'dislike')
+                    self.scrape_images(save_dir)
+                    self.dislike()
+                else:
+                    print("You must enter 'superlike', 'like' or 'dislike'")
+                    continue
+            except Exception as e:
+                print("Error:", e)
+                break
 
-    def close_match(self):
-        match_popup = self.driver.find_element_by_xpath('//*[@id="modal-manager-canvas"]/div/div/div[1]/div/div[3]/a')
-        match_popup.click()
-
-    def save_image(self):
-        image = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div/div[1]/span/a[2]/div/div[1]/div/div[2]/div/div')
-        with open(self.data_path + '\\tinder\\image.png', 'wb') as file:
-            file.write(image.screenshot_as_png)
 
 if __name__ == "__main__":
 
