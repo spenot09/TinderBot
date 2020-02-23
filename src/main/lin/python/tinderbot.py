@@ -1,7 +1,10 @@
+########################################################################################################################
 # IMPORTS
+########################################################################################################################
 import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 from time import time, sleep
 
 # PATH
@@ -10,10 +13,13 @@ if 'PYDEVD_LOAD_VALUES_ASYNC' in os.environ:
     sys.path.append(os.getcwd()+'\\src\\main\\lin\\python')
 
 # LOCAL MODULE IMPORTS
-from mypath import get_path, my_cd
+from mypath import get_path
 from credentials import username, password
 
 
+########################################################################################################################
+# TINDERBOT
+########################################################################################################################
 class TinderBot:
     def __init__(self):
         self.root_path = get_path('root_path')
@@ -61,26 +67,34 @@ class TinderBot:
             popup_2 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[2]/span')
         popup_2.click()
 
+    def check_exists_by_xpath(self, xpath):
+        """Check if an xpath exists"""
+        try:
+            self.driver.find_element_by_xpath(xpath)
+        except NoSuchElementException:
+            return False
+        return True
+
     def like(self):
         try:
+            self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_RIGHT)
+        except:
             like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div/button[3]')
             like_btn.click()
-        except:
-            self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_RIGHT)
 
     def super_like(self):
         try:
+            self.driver.find_element_by_tag_name('body').send_keys(Keys.ENTER)
+        except:
             like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div/button[2]')
             like_btn.click()
-        except:
-            self.driver.find_element_by_tag_name('body').send_keys(Keys.ENTER)
 
     def dislike(self):
         try:
+            self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_LEFT)
+        except:
             dislike_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div/button[1]')
             dislike_btn.click()
-        except:
-            self.driver.find_element_by_tag_name('body').send_keys(Keys.ARROW_LEFT)
 
     def press_space(self):
         self.driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
@@ -134,15 +148,15 @@ class TinderBot:
         while True:
             classify = input()
             try:
-                if classify == 'superlike':
+                if classify == 'superlike' or classify == 's':
                     save_dir = os.path.join(self.data_path, 'tinder', 'superlike')
                     self.scrape_images(save_dir)
                     self.super_like()
-                elif classify == 'like':
+                elif classify == 'like' or classify == 'l':
                     save_dir = os.path.join(self.data_path, 'tinder', 'like')
                     self.scrape_images(save_dir)
                     self.like()
-                elif classify == 'dislike':
+                elif classify == 'dislike' or classify == 'd':
                     save_dir = os.path.join(self.data_path, 'tinder', 'dislike')
                     self.scrape_images(save_dir)
                     self.dislike()
@@ -153,8 +167,57 @@ class TinderBot:
                 print("Error:", e)
                 break
 
+    def check_new_matches(self):
+        xpath = '//*[@id="match-tab"]/span'
+        if self.check_exists_by_xpath(xpath):
+            matches = int(self.driver.find_element_by_xpath(xpath).text)
+        else:
+            matches = 0
+        return matches
+
+    def send_message_matches(self, match_number, message, send=False):
+        if match_number % 9 == 0:
+            row = match_number // 9
+            col = 9
+        else:
+            row = match_number // 9 + 1
+            col = match_number % 9
+        row = int(match_number/9)+1
+        xpath = f'//*[@id="matchListNoMessages"]/div[{row}]/div[{col}]/a/div[1]'
+        self.driver.find_element_by_xpath(xpath).click()
+        message_box = '//*[@id="chat-text-area"]'
+        self.driver.find_element_by_xpath(message_box).send_keys(message)
+        if send:
+            send_button = '//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/div[3]/form/button'
+            self.driver.find_element_by_xpath(send_button).click()
+        return
+
+    def send_messages_all_new_matches(self):
+        while self.check_new_matches() != 0:
+            message = input()
+            self.send_message_matches(self.check_new_matches()+1, message)
+
+
+def path_dump():
+    """
+    Dump of useful paths
+    """
+    # Match popup
+    name = '//*[@id="modal-manager-canvas"]/div/div/div[1]/div/div[3]/div[2]'
+    keep_swiping = '//*[@id="modal-manager-canvas"]/div/div/div[1]/div/div[3]/a'
+    say_something = '//*[@id="chat-text-area"]'
+    send_message = '//*[@id="modal-manager-canvas"]/div/div/div[1]/div/div[3]/div[3]/form/button'
+
+    # Matches list
+    first_match = '//*[@id="matchListNoMessages"]/div[1]/div[2]/a/div[1]'
+    red_button = '//*[@id="matchListNoMessages"]/div[1]/div[2]/a/div[3]'
+    message_box = '//*[@id="chat-text-area"]'
+    send_message = '//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/div[3]/form/button'
+    name = '//*[@id="SC.chat_5e480856be30ea0100107aec5e496690bce67e0100b9807c"]/div/div/h3/span'
+
 
 if __name__ == "__main__":
 
     bot = TinderBot()
     bot.login()
+    # bot.manual_classify()
