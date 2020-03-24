@@ -35,8 +35,15 @@ class TinderBot:
 
         sleep(3)
 
-        fb_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/div[2]/button')
-        fb_btn.click()
+        fb_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/span/div[2]/button')
+        if fb_btn.text == 'LOGIN WITH FACEBOOK':
+            fb_btn.click()
+        else:
+            if fb_btn.text == 'LOG IN WITH PHONE NUMBER':
+                more_opt_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/span/button')
+                more_opt_btn.click()
+            fb_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/span/div[3]/button')
+            fb_btn.click()
 
         # switch to login popup
         base_window = self.driver.window_handles[0]
