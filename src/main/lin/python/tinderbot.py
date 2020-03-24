@@ -60,7 +60,7 @@ class TinderBot:
 
         self.driver.switch_to.window(base_window)
 
-        sleep(3)
+        sleep(5)
 
         try:
             popup_1 = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]')
@@ -199,10 +199,10 @@ class TinderBot:
             self.driver.find_element_by_xpath(send_button).click()
         return
 
-    def send_messages_all_new_matches(self):
+    def send_messages_all_new_matches(self, send=False):
         while self.check_new_matches() != 0:
             message = input()
-            self.send_message_matches(self.check_new_matches()+1, message)
+            self.send_message_matches(self.check_new_matches()+1, message, send)
 
 
 def path_dump():
