@@ -35,6 +35,12 @@ def get_path(which='dir_path'):
             root_path = my_cd(file_path, 5)
             dir_path = my_cd(file_path, 1)
             data_path = my_cd(file_path, 1) + "/data"
+    else:
+        # PyCharm - paths for testing in PyCharm run/debug
+        file_path = os.path.abspath(__file__)
+        root_path = my_cd(file_path, 5)
+        dir_path = my_cd(file_path, 1)
+        data_path = my_cd(file_path, 1) + "/data"
     if which == 'file_path':
         return file_path
     elif which == 'dir_path':
