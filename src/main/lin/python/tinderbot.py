@@ -36,7 +36,7 @@ class TinderBot:
         sleep(3)
 
         fb_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/span/div[2]/button')
-        if fb_btn.text == 'LOGIN WITH FACEBOOK':
+        if fb_btn.text == 'LOGIN WITH FACEBOOK' or fb_btn.text == 'LOG IN WITH FACEBOOK':
             fb_btn.click()
         else:
             if fb_btn.text == 'LOG IN WITH PHONE NUMBER':
